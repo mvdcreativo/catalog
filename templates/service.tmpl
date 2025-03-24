@@ -1,0 +1,36 @@
+package {{.Domain}}
+
+import (
+	"context"
+
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/generics/service"
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/utils/mql_request_filter"
+)
+
+type {{.StructName}}Service interface {
+	service.CRUDService[{{.StructName}}]
+	FindAll(ctx context.Context, filters map[string]interface{}, page, limit int) ([]{{.StructName}}, int64, error)
+}
+
+type {{.Domain}}Service struct {
+	service.CRUDService[{{.StructName}}]
+	repo {{.StructName}}Repository
+}
+
+func New{{.StructName}}Service(repo {{.StructName}}Repository) {{.StructName}}Service {
+	genService := service.NewCRUDService(repo)
+
+	return &{{.Domain}}Service{
+		CRUDService: genService,
+		repo:        repo,
+	}
+}
+
+func (s *{{.Domain}}Service) FindAll(ctx context.Context, filterParams map[string]interface{}, page, limit int) ([]{{.StructName}}, int64, error) {
+	filter, err := mql_request_filter.ValidateAndSanitizeFilter(filterParams, {{.StructName}}FilterWhitelist)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return s.repo.FindAll(ctx, filter, page, limit)
+}

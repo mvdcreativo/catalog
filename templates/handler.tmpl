@@ -1,0 +1,15 @@
+package {{.Domain}}
+
+import (
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/generics/handler"
+)
+
+
+type {{.StructName}}Handler struct {
+	handler.CRUDHandler[{{.StructName}}]
+}
+
+func New{{.StructName}}Handler(service {{.StructName}}Service) *{{.StructName}}Handler {
+	genHandler := handler.NewCRUDHandler(service)
+	return &{{.StructName}}Handler{CRUDHandler: *genHandler}
+}

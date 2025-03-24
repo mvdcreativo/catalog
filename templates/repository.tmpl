@@ -1,0 +1,19 @@
+package {{.Domain}}
+
+import (
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/db/mongo_db/mongo_repository"
+	"go.mongodb.org/mongo-driver/mongo"
+)
+
+type {{.StructName}}Repository interface {
+	mongo_repository.CRUDRepository[{{.StructName}}] 
+}
+
+type {{.Domain}}Repository struct {
+	mongo_repository.CRUDRepository[{{.StructName}}]
+}
+
+func New{{.StructName}}Repository(client *mongo.Client, dbName, collectionName string) {{.StructName}}Repository {
+	genRepo := mongo_repository.NewCRUDRepository[{{.StructName}}](client, dbName, collectionName)
+	return &{{.Domain}}Repository{CRUDRepository: genRepo}
+}

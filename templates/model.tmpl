@@ -1,0 +1,42 @@
+package {{.Domain}}
+
+import (
+	"fmt"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+type {{.StructName}} struct {
+	ID               primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name             string             `json:"name" bson:"name"`
+  CreatedAt        time.Time          `bson:"created_at" json:"created_at"`               // Fecha de creación.
+	UpdatedAt        time.Time          `bson:"updated_at" json:"updated_at"`     
+}
+
+
+var {{.StructName}}FilterWhitelist = map[string]bool{
+	"name":                   true,
+  "created_at"              true,
+  "updated_at"              true,
+  
+}
+
+func ({{.StructName}}) GetFilterWhitelist() (map[string]bool, error) {
+	if {{.StructName}}FilterWhitelist == nil {
+		return nil, fmt.Errorf("filter whitelist is not initialized")
+	}
+	return {{.StructName}}FilterWhitelist, nil
+}
+
+func (p *{{.StructName}}) SetID(id primitive.ObjectID) {
+	p.ID = id
+}
+
+func (p *{{.StructName}}) SetCreationDate(t time.Time) {
+	p.CreatedAt = t
+}
+
+func (p *{{.StructName}}) SetUpdateDate(t time.Time) {
+	p.UpdatedAt = t
+}
