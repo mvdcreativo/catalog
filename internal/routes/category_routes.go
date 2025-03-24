@@ -6,16 +6,11 @@ import (
 )
 
 // CategoryRoutes registra las rutas relacionadas con categorías.
-func CategoryRoutes(
-	api *gin.RouterGroup,
-	categoryHandler *handlers.CategoryHandler,
-) {
-	categoryGroup := api.Group("/categories")
-	{
-		categoryGroup.GET("/", categoryHandler.FindAll)
-		categoryGroup.GET("/:id", categoryHandler.FindByID)
-		categoryGroup.POST("/", categoryHandler.Insert)
-		categoryGroup.PUT("/:id", categoryHandler.Update)
-		categoryGroup.DELETE("/:id", categoryHandler.Delete)
-	}
+func RegisterCategoryRoutes(rg *gin.RouterGroup, h *handlers.CategoryHandler) {
+	group := rg.Group("/categories")
+	group.GET("", h.FindAll)
+	group.POST("", h.Insert)
+	group.GET("/:id", h.FindByID)
+	group.PUT("/:id", h.Update)
+	group.DELETE("/:id", h.Delete)
 }

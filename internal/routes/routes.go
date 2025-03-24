@@ -6,13 +6,11 @@ import (
 )
 
 // SetupRoutes define las rutas del API
-func SetupRoutes(
-	router *gin.Engine,
-	productHandler *handlers.ProductHandler,
-	categoryHandler *handlers.CategoryHandler,
+func SetupRoutes(r *gin.Engine,
+	ph *handlers.ProductHandler,
+	ch *handlers.CategoryHandler,
 ) {
-	api := router.Group("/api") // Prefijo común para todas las rutas
-
-	ProductRoutes(api, productHandler)
-	CategoryRoutes(api, categoryHandler)
+	api := r.Group("/api")
+	RegisterProductRoutes(api, ph)
+	RegisterCategoryRoutes(api, ch)
 }

@@ -28,8 +28,8 @@ type crudRepository[T any] struct {
 }
 
 // NewCRUDRepository crea un nuevo repositorio CRUD genérico para la colección dada.
-func NewCRUDRepository[T any](client *mongo.Client, collectionName string) CRUDRepository[T] {
-	col := MongoDB.Collection(collectionName)
+func NewCRUDRepository[T any](client *mongo.Client, dbName, collectionName string) CRUDRepository[T] {
+	col := client.Database(dbName).Collection(collectionName)
 	return &crudRepository[T]{
 		collection: col,
 	}

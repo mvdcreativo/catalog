@@ -18,7 +18,7 @@ type productRepository struct {
 }
 
 // NewProductRepository crea un nuevo repositorio de Product usando la colección "products" de la base de datos.
-func NewProductRepository(client *mongo.Client) ProductRepository {
-	genRepo := NewCRUDRepository[models.Product](client, "products")
+func NewProductRepository(client *mongo.Client, dbName, collectionName string) ProductRepository {
+	genRepo := NewCRUDRepository[models.Product](client, dbName, collectionName)
 	return &productRepository{CRUDRepository: genRepo}
 }

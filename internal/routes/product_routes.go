@@ -6,15 +6,11 @@ import (
 )
 
 // ProductRoutes registra las rutas de productos
-func ProductRoutes(
-	router *gin.RouterGroup,
-	productHandler *handlers.ProductHandler) {
-	products := router.Group("/products")
-	{
-		products.GET("/", productHandler.FindAll)
-		products.POST("/", productHandler.Insert)
-		products.GET("/:id", productHandler.FindByID)
-		products.PUT("/:id", productHandler.Update)
-		products.DELETE("/:id", productHandler.Delete)
-	}
+func RegisterProductRoutes(rg *gin.RouterGroup, h *handlers.ProductHandler) {
+	group := rg.Group("/products")
+	group.GET("", h.FindAll)
+	group.POST("", h.Insert)
+	group.GET("/:id", h.FindByID)
+	group.PUT("/:id", h.Update)
+	group.DELETE("/:id", h.Delete)
 }

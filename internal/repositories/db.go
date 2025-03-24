@@ -10,40 +10,20 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var MongoClient *mongo.Client
-var MongoDB *mongo.Database
-
-// ConnectDB inicializa la conexión a MongoDB
-func ConnectDB() {
-	cfg := config.LoadConfig()
-	uri := config.GetDBURI()
-	dbName := cfg.DbName
-
-	// Configurar cliente con tiempo de espera
-	clientOptions := options.Client().ApplyURI(uri)
+func ConnectDB() (*mongo.Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Conectar a MongoDB
+	clientOptions := options.Client().ApplyURI(config.GetDBURI())
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		log.Fatalf("❌ Error conectando a MongoDB: %v", err)
+		return nil, err
 	}
 
-	// Verificar conexión
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		log.Fatalf("❌ No se pudo conectar a MongoDB: %v", err)
+	if err := client.Ping(ctx, nil); err != nil {
+		return nil, err
 	}
 
-	// Asignar cliente y base de datos
-	MongoClient = client
-	MongoDB = client.Database(dbName)
-
-	log.Println("✅ Conectado a MongoDB exitosamente!")
-}
-
-// GetCollection obtiene una colección específica de la base de datos
-func GetCollection(collectionName string) *mongo.Collection {
-	return MongoDB.Collection(collectionName)
+	log.Println("✅ Conectado a MongoDB")
+	return client, nil
 }
