@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// App contiene todas las dependencias que se inyectan en la aplicación
 type App struct {
 	ProductHandler  *product.ProductHandler
 	CategoryHandler *category.CategoryHandler
@@ -19,40 +20,50 @@ type App struct {
 	Config          *config.Config
 }
 
+// Módulos registrados: cada uno construye su repositorio, servicio y handler
+var modules = []func(app *App){
+	registerProduct,
+	registerCategory,
+}
+
+// InitializeApp carga la configuración, conecta a la base de datos y registra todos los módulos
 func InitializeApp() *App {
 	cfg := config.LoadConfig()
 
-	mongoClient, err := mongo_db.ConnectDB()
+	client, err := mongo_db.ConnectDB()
 	if err != nil {
 		log.Fatalf("❌ Error conectando a MongoDB: %v", err)
 	}
 
-	// Repositorios
-	productRepo := product.NewProductRepository(mongoClient, cfg.DbName, "products")
-	categoryRepo := category.NewCategoryRepository(mongoClient, cfg.DbName, "categories")
-
-	// Servicios
-	productService := product.NewProductService(productRepo)
-	categoryService := category.NewCategoryService(categoryRepo)
-
-	// Handlers
-	productHandler := product.NewProductHandler(productService)
-	categoryHandler := category.NewCategoryHandler(categoryService)
-
-	return &App{
-		ProductHandler:  productHandler,
-		CategoryHandler: categoryHandler,
-		MongoClient:     mongoClient,
-		Config:          cfg,
+	app := &App{
+		Config:      cfg,
+		MongoClient: client,
 	}
+
+	for _, register := range modules {
+		register(app)
+	}
+
+	return app
 }
 
-func (a *App) SetupRouter() *gin.Engine {
+// SetupRouter crea y devuelve un router Gin con las rutas configuradas
+func (app *App) SetupRouter() *gin.Engine {
 	r := gin.Default()
-
-	routes.SetupRoutes(r,
-		a.ProductHandler,
-		a.CategoryHandler,
-	)
+	routes.SetupRoutes(r, app.ProductHandler, app.CategoryHandler)
 	return r
+}
+
+// --- REGISTRO DE MÓDULOS ---
+
+func registerProduct(app *App) {
+	repo := product.NewProductRepository(app.MongoClient, app.Config.DbName, "products")
+	service := product.NewProductService(repo)
+	app.ProductHandler = product.NewProductHandler(service)
+}
+
+func registerCategory(app *App) {
+	repo := category.NewCategoryRepository(app.MongoClient, app.Config.DbName, "categories")
+	service := category.NewCategoryService(repo)
+	app.CategoryHandler = category.NewCategoryHandler(service)
 }
