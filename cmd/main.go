@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/gin-gonic/gin"
 	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/bootstrap"
 	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/watchers"
 )
@@ -19,4 +20,8 @@ func main() {
 	if err := r.Run(":" + app.Config.Port); err != nil {
 		log.Fatal(err)
 	}
+
+	r.GET("/health_check", func(c *gin.Context) {
+		c.String(200, "OK")
+	})
 }

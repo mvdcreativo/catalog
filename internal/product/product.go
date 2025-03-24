@@ -1,9 +1,10 @@
-package models
+package product
 
 import (
 	"fmt"
 	"time"
 
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/category"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -24,7 +25,7 @@ type Product struct {
 
 	// Relación con categorías:
 	// Opción B: Snapshot embebido de la información mínima de cada categoría.
-	Categories []CategoryRefDTO `bson:"categories,omitempty" json:"categories,omitempty"`
+	Categories []category.CategoryRefDTO `bson:"categories,omitempty" json:"categories,omitempty"`
 
 	ParentProductID *primitive.ObjectID `bson:"parent_product_id,omitempty" json:"parent_product_id,omitempty"` // Referencia al producto padre, si es variante.
 	Images          []ProductImage      `bson:"images" json:"images"`                                           // Imágenes asociadas.

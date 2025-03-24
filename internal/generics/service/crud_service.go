@@ -1,10 +1,10 @@
-package services
+package service
 
 import (
 	"context"
 	"time"
 
-	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/repositories"
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/db/mongo_db/mongo_repository"
 	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/utils/mql_request_filter"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -29,11 +29,11 @@ type CRUDService[T EntityModel] interface {
 }
 
 type crudService[T any] struct {
-	repo repositories.CRUDRepository[T]
+	repo mongo_repository.CRUDRepository[T]
 }
 
 // NewProductService crea una nueva instancia de ProductService inyectando el repositorio.
-func NewCRUDService[T EntityModel](repo repositories.CRUDRepository[T]) CRUDService[T] {
+func NewCRUDService[T EntityModel](repo mongo_repository.CRUDRepository[T]) CRUDService[T] {
 	return &crudService[T]{
 		repo: repo,
 	}

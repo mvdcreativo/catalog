@@ -1,4 +1,4 @@
-package handlers
+package handler
 
 import (
 	"log"
@@ -6,18 +6,18 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/generics/service"
 	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/responses"
-	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/services"
 	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/utils/mql_request_filter"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type CRUDHandler[T services.EntityModel] struct {
-	productService services.CRUDService[T]
+type CRUDHandler[T service.EntityModel] struct {
+	productService service.CRUDService[T]
 }
 
 // NewProductHandler crea una nueva instancia de CRUDHandler con el servicio inyectado.
-func NewCRUDHandler[T services.EntityModel](productService services.CRUDService[T]) *CRUDHandler[T] {
+func NewCRUDHandler[T service.EntityModel](productService service.CRUDService[T]) *CRUDHandler[T] {
 	return &CRUDHandler[T]{
 		productService: productService,
 	}
@@ -67,7 +67,7 @@ func (h *CRUDHandler[T]) Insert(c *gin.Context) {
 	}
 
 	// Casting dinámico al tipo Trackable
-	if item, ok := any(&newItem).(services.Trackable); ok {
+	if item, ok := any(&newItem).(service.Trackable); ok {
 		item.SetID(primitive.NewObjectID())
 		item.SetCreationDate(time.Now())
 		item.SetUpdateDate(time.Now())
@@ -103,7 +103,7 @@ func (h *CRUDHandler[T]) Update(c *gin.Context) {
 
 	// Se asigna el ID del parámetro a la entidad y se actualiza la fecha de modificación
 	// Casting dinámico al tipo Trackable
-	if item, ok := any(&updates).(services.Trackable); ok {
+	if item, ok := any(&updates).(service.Trackable); ok {
 		item.SetID(primitive.NewObjectID())
 		item.SetCreationDate(time.Now())
 		item.SetUpdateDate(time.Now())

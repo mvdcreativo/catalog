@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/models"
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/category"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -57,7 +57,7 @@ func WatchCategoryChanges(client *mongo.Client, dbName string) {
 			}
 
 			// Convertir el fullDocument a una instancia de CategoryRefDTO.
-			var categoryRefDTO models.CategoryRefDTO
+			var categoryRefDTO category.CategoryRefDTO
 			fullDocBytes, err := bson.Marshal(fullDoc)
 			if err != nil {
 				log.Printf("Error al marshal fullDoc: %v", err)

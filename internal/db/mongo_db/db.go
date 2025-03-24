@@ -1,4 +1,4 @@
-package repositories
+package mongo_db
 
 import (
 	"context"
