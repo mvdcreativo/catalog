@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/interfaces/storage"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -15,13 +16,13 @@ import (
 // - Images: Lista de URLs de imágenes asociadas a la categoría.
 // - Icon: URL o nombre del icono de la categoría.
 type Category struct {
-	ID               primitive.ObjectID  `bson:"_id,omitempty" json:"id"`
-	Name             string              `bson:"name" json:"name"`
-	CategoryParentID *primitive.ObjectID `bson:"category_parent_id,omitempty" json:"category_parent_id,omitempty"`
-	Images           []string            `bson:"images,omitempty" json:"images,omitempty"`
-	Icon             string              `bson:"icon,omitempty" json:"icon,omitempty"`
-	CreatedAt        time.Time           `bson:"created_at" json:"created_at"` // Fecha de creación.
-	UpdatedAt        time.Time           `bson:"updated_at" json:"updated_at"` // Fecha de última actualización.
+	ID               primitive.ObjectID   `bson:"_id,omitempty" json:"id"`
+	Name             string               `bson:"name" json:"name" validate:"required,min=3,max=50"`
+	CategoryParentID *primitive.ObjectID  `bson:"category_parent_id,omitempty" json:"category_parent_id,omitempty" `
+	Images           []storage.FileObject `bson:"images,omitempty" json:"images,omitempty"`
+	Icon             string               `bson:"icon,omitempty" json:"icon,omitempty" validate:"url"`
+	CreatedAt        time.Time            `bson:"created_at" json:"created_at"` // Fecha de creación.
+	UpdatedAt        time.Time            `bson:"updated_at" json:"updated_at"` // Fecha de última actualización.
 }
 
 // CategoryView es una versión reducida de Category sin el campo Images.

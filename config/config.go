@@ -1,68 +1,88 @@
 package config
 
 import (
-	"fmt"
+	"flag"
 	"log"
-	"net/url"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
+	"github.com/spf13/viper"
 )
 
-// Config holds the application configuration
+type AppConfig struct {
+	Name string
+	Port string
+}
+
+type DatabaseConfig struct {
+	Uri  string
+	Name string
+}
+
+type BucketConfig struct {
+	Name     string
+	Region   string
+	Key      string
+	Secret   string
+	Endpoint string
+	BaseURL  string
+	UseSSL   bool
+}
+
+type FileValidationConfig struct {
+	MaxSizeMB    int64    `mapstructure:"maxSizeMB"`
+	AllowedTypes []string `mapstructure:"allowedTypes"`
+}
+
+type UploadConfig struct {
+	Images FileValidationConfig `mapstructure:"images"`
+	Docs   FileValidationConfig `mapstructure:"docs"`
+}
+
 type Config struct {
-	AppName      string
-	Port         string
-	DbUser       string
-	DbPassword   string
-	DbHost       string
-	DbName       string
-	DbConnParams string
-	DbCluster    string
+	App      AppConfig
+	Database DatabaseConfig
+	Bucket   BucketConfig
+	Upload   UploadConfig
 }
 
-// LoadConfig loads configuration from environment variables or .env file
 func LoadConfig() *Config {
-	err := godotenv.Load()
+	_ = godotenv.Load()
+
+	env := flag.String("env", "prod", "Ambiente de ejecución (dev, prod)")
+	flag.Parse()
+
+	var logMessage string
+	var configPath string
+	if *env == "dev" {
+		configPath = "config/config.dev.yaml"
+		logMessage = "😎 Loading development environment..."
+	} else {
+		configPath = "config/config.yaml"
+		logMessage = "🔥 Loading production environment"
+	}
+
+	// Leer e interpolar variables de entorno
+	content, err := os.ReadFile(configPath)
 	if err != nil {
-		log.Println("No .env file found, using environment variables")
+		log.Fatalf("❌ No se pudo leer %s: %v", configPath, err)
 	}
 
-	return &Config{
-		AppName:      getEnv("APP_NAME", ""),
-		Port:         getEnv("PORT", "8080"),
-		DbUser:       getEnv("USER_DB", "default_user"),
-		DbPassword:   getEnv("PASSWORD_DB", "default_pass"),
-		DbHost:       getEnv("DB_HOST", "localhost"),
-		DbName:       getEnv("DB_NAME", "test_db"),
-		DbConnParams: getEnv("DB_CONNECTION_PARAMS", ""),
-		DbCluster:    getEnv("DB_CLUSTER", "cluster0"),
+	interpolated := os.ExpandEnv(string(content))
+
+	viper.SetConfigType("yaml")
+	viper.AutomaticEnv() // permite override por env vars
+	if err := viper.ReadConfig(strings.NewReader(interpolated)); err != nil {
+		log.Fatalf("❌ Error leyendo config: %v", err)
 	}
-}
 
-// GetDBURI construye dinámicamente la URI de conexión a MongoDB
-func GetDBURI() string {
-	cfg := LoadConfig()
-	dbUser := cfg.DbUser
-	dbPass := cfg.DbPassword
-	dbhost := cfg.DbHost
-	dbConnParams := cfg.DbConnParams
-	dbCluster := cfg.DbCluster
-
-	// Escapar caracteres especiales en la contraseña para evitar errores en la URI
-	escapedPassword := url.QueryEscape(dbPass)
-
-	// Construir la URI segura para MongoDB
-	uri := fmt.Sprintf("mongodb+srv://%s:%s@%s/%sappName=%s",
-		dbUser, escapedPassword, dbhost, dbConnParams, dbCluster)
-
-	return uri
-}
-
-// getEnv retrieves environment variables or returns a default value
-func getEnv(key, defaultValue string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
+	var cfg Config
+	if err := viper.Unmarshal(&cfg); err != nil {
+		log.Fatalf("❌ Error parseando configuración: %v", err)
 	}
-	return defaultValue
+
+	log.Print(logMessage)
+
+	return &cfg
 }

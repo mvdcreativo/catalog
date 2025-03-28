@@ -14,10 +14,10 @@ func main() {
 
 	r := app.SetupRouter()
 
-	go watchers.WatchCategoryChanges(app.MongoClient, app.Config.DbName)
+	go watchers.WatchCategoryChanges(app.MongoClient, app.Config.Database.Name)
 
-	log.Printf("🚀 Servidor corriendo en el puerto %s", app.Config.Port)
-	if err := r.Run(":" + app.Config.Port); err != nil {
+	log.Printf("🚀 Servidor corriendo en el puerto %s", app.Config.App.Port)
+	if err := r.Run(":" + app.Config.App.Port); err != nil {
 		log.Fatal(err)
 	}
 

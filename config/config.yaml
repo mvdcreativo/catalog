@@ -1,0 +1,31 @@
+app:
+  name: "Catalog API"
+  port: "8080"
+
+database:
+  uri: ""
+  name: "catalog"
+  cluster: ""
+
+bucket:
+  name: ""
+  region: "default_region"
+  endpoint: ""
+  baseURL: ""
+  useSSL: false
+  accessKey: ""
+  secretKey: ""
+
+upload:
+  images:
+    maxSizeMB: 5
+    allowedTypes:
+      - image/jpeg
+      - image/png
+      - image/jpg
+      - image/webp
+  docs:
+    maxSizeMB: 16
+    allowedTypes:
+      - application/pdf  
+    

@@ -1,20 +1,21 @@
 package category
 
 import (
-	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/db/mongo_db/mongo_repository"
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/generics/repository/mongo_repository"
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/interfaces/i_crud"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // CategoryRepository define las operaciones de acceso a datos para Category.
 type CategoryRepository interface {
-	mongo_repository.CRUDRepository[Category] // Hereda los métodos genéricosgenéricos.
+	i_crud.CRUDRepository[Category] // Hereda los métodos genéricosgenéricos.
 
 	// Insert(category *category.Category) error ejemplo de un custom repo
 
 }
 
 type categoryRepository struct {
-	mongo_repository.CRUDRepository[Category]
+	i_crud.CRUDRepository[Category]
 }
 
 // NewCategoryRepository crea un nuevo repositorio de Category usando la colección "categorys" de la base de datos.

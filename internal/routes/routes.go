@@ -4,8 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/category"
-	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/product"
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/domains/category"
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/domains/product"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // SetupRoutes define las rutas del API
@@ -14,6 +16,7 @@ func SetupRoutes(r *gin.Engine,
 	ch *category.CategoryHandler,
 ) {
 
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	api := r.Group("/api/v1")
 	RegisterProductRoutes(api, ph)
 	RegisterCategoryRoutes(api, ch)

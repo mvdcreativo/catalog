@@ -1,0 +1,31 @@
+app:
+  name: "Catalog API"
+  port: "8080"
+
+database:
+  uri: "mongodb+srv://${MONGODB_USER}:${MONGODB_PASSWORD}@clustertests.mob12.mongodb.net/?retryWrites=true&w=majority&appName=ClusterTests"
+  name: "catalog"
+  cluster: "ClusterTests"
+
+bucket:
+  name: "bucketlocal"
+  region: "default_region"
+  endpoint: "localhost:9000"
+  baseURL: "http://localhost:9000"
+  useSSL: false
+  accessKey: "${BUCKET_KEY}"
+  secretKey: "${BUCKET_SECRET}"
+
+
+upload:
+  images:
+    maxSizeMB: 5
+    allowedTypes:
+      - image/jpeg
+      - image/png
+      - image/jpg
+      - image/webp
+  docs:
+    maxSizeMB: 16
+    allowedTypes:
+      - application/pdf  

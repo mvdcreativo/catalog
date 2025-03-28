@@ -2,16 +2,17 @@ package category
 
 import (
 	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/generics/service"
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/interfaces/i_crud"
 )
 
 // CategoryService define las operaciones de negocio para Category.
 
 type CategoryService interface {
-	service.CRUDService[Category]
+	i_crud.CRUDService[Category]
 }
 
 type categoryService struct {
-	service.CRUDService[Category]
+	i_crud.CRUDService[Category]
 }
 
 // NewCategoryService crea una nueva instancia de CategoryService inyectando el repositorio.

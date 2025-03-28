@@ -4,15 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/db/mongo_db/mongo_repository"
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/interfaces/i_crud"
 	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/utils/mql_request_filter"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ProductService define las operaciones de negocio para Product.
-type EntityModel interface {
-	GetFilterWhitelist() (map[string]bool, error)
-}
 
 type Trackable interface {
 	SetID(id primitive.ObjectID)
@@ -20,20 +17,12 @@ type Trackable interface {
 	SetUpdateDate(t time.Time)
 }
 
-type CRUDService[T EntityModel] interface {
-	Insert(ctx context.Context, entity *T) error
-	FindByID(ctx context.Context, id string) (*T, error)
-	Update(ctx context.Context, id string, entity *T) error
-	Delete(ctx context.Context, id string) error
-	FindAll(ctx context.Context, filters map[string]interface{}, page, limit int) ([]T, int64, error)
-}
-
 type crudService[T any] struct {
-	repo mongo_repository.CRUDRepository[T]
+	repo i_crud.CRUDRepository[T]
 }
 
 // NewProductService crea una nueva instancia de ProductService inyectando el repositorio.
-func NewCRUDService[T EntityModel](repo mongo_repository.CRUDRepository[T]) CRUDService[T] {
+func NewCRUDService[T mql_request_filter.EntityModel](repo i_crud.CRUDRepository[T]) i_crud.CRUDService[T] {
 	return &crudService[T]{
 		repo: repo,
 	}
@@ -58,7 +47,7 @@ func (s *crudService[T]) Delete(ctx context.Context, id string) error {
 func (s *crudService[T]) FindAll(ctx context.Context, filters map[string]interface{}, page, limit int) ([]T, int64, error) {
 	// Validar y sanitizar el filtro
 	var model T
-	whitelist, err := any(model).(EntityModel).GetFilterWhitelist()
+	whitelist, err := any(model).(mql_request_filter.EntityModel).GetFilterWhitelist()
 	if err != nil {
 		return nil, 0, err
 	}

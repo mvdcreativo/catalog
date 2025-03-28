@@ -1,29 +1,30 @@
 package handler
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/generics/service"
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/interfaces/i_crud"
 	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/responses"
 	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/utils/mql_request_filter"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type CRUDHandler[T service.EntityModel] struct {
-	productService service.CRUDService[T]
+type CRUDHandler[T mql_request_filter.EntityModel] struct {
+	curudService i_crud.CRUDService[T]
 }
 
-// NewProductHandler crea una nueva instancia de CRUDHandler con el servicio inyectado.
-func NewCRUDHandler[T service.EntityModel](productService service.CRUDService[T]) *CRUDHandler[T] {
+func NewCRUDHandler[T mql_request_filter.EntityModel](crudService i_crud.CRUDService[T]) *CRUDHandler[T] {
 	return &CRUDHandler[T]{
-		productService: productService,
+		curudService: crudService,
 	}
 }
 
-// GetProducts maneja GET /products
 func (h *CRUDHandler[T]) FindAll(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -35,36 +36,39 @@ func (h *CRUDHandler[T]) FindAll(c *gin.Context) {
 
 	page, limit := mql_request_filter.GetPaginationParams(c)
 
-	products, total, err := h.productService.FindAll(ctx, filter, page, limit)
+	results, total, err := h.curudService.FindAll(ctx, filter, page, limit)
 	if err != nil {
 		responses.RespondError(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	responses.RespondPaginated(c, http.StatusOK, "Products list", products, page, limit, total)
+	responses.RespondPaginated(c, http.StatusOK, "Results list", results, page, limit, total)
 }
 
-// GetProductByID maneja GET /products/:id
 func (h *CRUDHandler[T]) FindByID(c *gin.Context) {
 	ctx := c.Request.Context()
-	id := c.Param("id")
-	product, err := h.productService.FindByID(ctx, id)
+
+	// Ya parseado por el middleware, lo recuperamos del contexto
+	objID := c.MustGet("objectID").(primitive.ObjectID)
+	id := objID.Hex() // Esto espera string
+	entity, err := h.curudService.FindByID(ctx, id)
+	// Valida existencia
 	if err != nil {
-		responses.RespondError(c, http.StatusNotFound, err.Error())
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			responses.RespondError(c, http.StatusNotFound, "Item not found")
+		} else {
+			responses.RespondError(c, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
-	responses.RespondSuccess(c, http.StatusOK, "Successfully obtained", product)
+
+	responses.RespondSuccess(c, http.StatusOK, "Successfully obtained", entity)
 }
 
-// CreateProduct maneja POST /products
 func (h *CRUDHandler[T]) Insert(c *gin.Context) {
 	ctx := c.Request.Context()
-	log.Println(ctx)
 
-	var newItem T
-	if err := c.ShouldBindJSON(&newItem); err != nil {
-		responses.RespondError(c, http.StatusBadRequest, err.Error())
-		return
-	}
+	raw, _ := c.Get("validatedRequest")
+	newItem := raw.(T)
 
 	// Casting dinámico al tipo Trackable
 	if item, ok := any(&newItem).(service.Trackable); ok {
@@ -73,69 +77,71 @@ func (h *CRUDHandler[T]) Insert(c *gin.Context) {
 		item.SetUpdateDate(time.Now())
 	}
 
-	if err := h.productService.Insert(ctx, &newItem); err != nil {
+	if err := h.curudService.Insert(ctx, &newItem); err != nil {
 		responses.RespondError(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 	responses.RespondSuccess(c, http.StatusCreated, "Created", newItem)
 }
 
-// UpdateProduct maneja PUT /products/:id
 func (h *CRUDHandler[T]) Update(c *gin.Context) {
 	ctx := c.Request.Context()
-	id := c.Param("id")
-	_, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		responses.RespondError(c, http.StatusBadRequest, err.Error())
-		return
-	}
-	// Verificar si el producto existe por su ID
-	if _, err := h.productService.FindByID(ctx, id); err != nil {
-		responses.RespondError(c, http.StatusNotFound, err.Error())
+
+	// Ya parseado por el middleware, lo recuperamos del contexto
+	objID := c.MustGet("objectID").(primitive.ObjectID)
+	id := objID.Hex() // Esto espera string
+
+	// Valida existencia
+	if _, err := h.curudService.FindByID(ctx, id); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			responses.RespondError(c, http.StatusNotFound, "Item not found")
+		} else {
+			responses.RespondError(c, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 
-	var updates T
-	if err := c.ShouldBindJSON(&updates); err != nil {
-		responses.RespondError(c, http.StatusBadRequest, err.Error())
-		return
-	}
+	raw, _ := c.Get("validatedRequest")
+	updates := raw.(T)
 
-	// Se asigna el ID del parámetro a la entidad y se actualiza la fecha de modificación
-	// Casting dinámico al tipo Trackable
 	if item, ok := any(&updates).(service.Trackable); ok {
-		item.SetID(primitive.NewObjectID())
-		item.SetCreationDate(time.Now())
 		item.SetUpdateDate(time.Now())
 	}
 
-	// Se llama al servicio para actualizar el producto
-	if err := h.productService.Update(ctx, id, &updates); err != nil {
+	if err := h.curudService.Update(ctx, id, &updates); err != nil {
 		responses.RespondError(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	updatedProduct, err := h.productService.FindByID(ctx, id)
+	updatedEntity, err := h.curudService.FindByID(ctx, id)
 	if err != nil {
 		responses.RespondError(c, http.StatusNotFound, err.Error())
 		return
 	}
 
-	responses.RespondSuccess(c, http.StatusOK, "Updated", updatedProduct)
+	responses.RespondSuccess(c, http.StatusOK, "Updated", updatedEntity)
 }
 
-// DeleteProduct maneja DELETE /products/:id
 func (h *CRUDHandler[T]) Delete(c *gin.Context) {
 	ctx := c.Request.Context()
-	log.Println(ctx)
-	idParam := c.Param("id")
-	// Verificar si el producto existe por su ID
-	if _, err := h.productService.FindByID(ctx, idParam); err != nil {
-		responses.RespondError(c, http.StatusNotFound, err.Error())
+
+	// Ya parseado por el middleware, lo recuperamos del contexto
+	objID := c.MustGet("objectID").(primitive.ObjectID)
+	id := objID.Hex() // Esto espera string
+
+	// Valida existencia
+	if _, err := h.curudService.FindByID(ctx, id); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			responses.RespondError(c, http.StatusNotFound, "Item not found")
+		} else {
+			responses.RespondError(c, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
-	// Se llama al servicio para eliminar el producto
-	if err := h.productService.Delete(ctx, idParam); err != nil {
+	// Se llama al servicio para eliminar el entity
+	if err := h.curudService.Delete(ctx, id); err != nil {
+		log.Print("❌ Error validando existencia")
+
 		responses.RespondError(c, http.StatusInternalServerError, err.Error())
 		return
 	}

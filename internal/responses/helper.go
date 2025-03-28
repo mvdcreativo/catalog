@@ -1,6 +1,8 @@
 package responses
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,10 +35,32 @@ func RespondPaginated(c *gin.Context, status int, message string, data interface
 }
 
 // RespondError envía una respuesta de error estandarizada.
-func RespondError(c *gin.Context, status int, errorMsg string) {
-	c.JSON(status, ErrorResponse{
-		Success: false,
-		Error:   errorMsg,
-		Code:    status,
-	})
+func RespondError(c *gin.Context, status int, message interface{}) {
+	switch msg := message.(type) {
+	case string:
+		c.JSON(status, ErrorResponse{
+			Success: false,
+			Error:   msg,
+			Code:    status,
+		})
+	case error:
+		c.JSON(status, ErrorResponse{
+			Success: false,
+			Error:   msg.Error(),
+			Code:    status,
+		})
+	case map[string]string:
+		// Podés usar otro struct para esto si querés
+		c.JSON(status, gin.H{
+			"success": false,
+			"errors":  msg,
+			"code":    status,
+		})
+	default:
+		c.JSON(status, ErrorResponse{
+			Success: false,
+			Error:   fmt.Sprintf("Unexpected error: %v", msg),
+			Code:    status,
+		})
+	}
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/category"
+	"github.com/mvdcreativo/e-commerce-saas/catalog/internal/domains/category"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
